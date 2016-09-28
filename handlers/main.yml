@@ -1,0 +1,6 @@
+---
+
+- name: Restart virtual_interface
+  service:
+    name: virtual_interface
+    state: restarted
