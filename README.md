@@ -1,7 +1,7 @@
-ansible-role-virtual_interface
+ansible-role-virtual-interface
 =====================
 
-A brief description of the role goes here.
+Creates virtual interfaces.
 
 Requirements
 ------------
@@ -11,9 +11,23 @@ None
 Role Variables
 --------------
 
-| variable | description | default |
+| Variable | Description | Default |
 |----------|-------------|---------|
+| virtual\_interface | dict holding configurations. highly OS-dependant. see the example below | {} |
 
+
+## OpenBSD
+
+    virtual_interface:
+      gre0:
+        config: |
+          !echo Starting \${if}
+          description "GRE tunnel"
+          up
+
+`virtual_interface.$INTERFACE` has the configuration for `$INTERFACE`.
+`virtual_interface.$INTERFACE.config` is the content of `hostname.if(5)` of the
+interface.
 
 Dependencies
 ------------
