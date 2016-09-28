@@ -1,0 +1,6 @@
+---
+# tasks file for ansible-role-virtual_interface
+
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- include: "configure-{{ ansible_os_family }}.yml"

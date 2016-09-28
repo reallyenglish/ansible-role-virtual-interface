@@ -1,0 +1,10 @@
+- hosts: localhost
+  roles:
+    - ansible-role-virtual-interface
+  vars:
+    virtual_interface:
+      gre0:
+        config: |
+          !echo Starting \${if}
+          description "GRE tunnel"
+          up

@@ -1,0 +1,28 @@
+---
+- name: Create hostname.if(5)
+  template:
+    src: hostname.if.j2
+    dest: "/etc/hostname.{{ item.key }}"
+    mode: 0640
+  with_dict: "{{ virtual_interface }}"
+  register: register_hostname_if
+
+- name: Apply hostname.if(5) change
+  # XXX when configuration of an interface changes and a daemon, such as ospfd,
+  # relies on it, the daemon should be restarted. however, there is no sane way
+  # to 'subscribe' to a reasource in ansble 2.1.x. as a result, the daemon must
+  # be manually restarted.
+  #
+  # ansible 2.2 is expected to support 'listen' keyword:
+  # https://github.com/ansible/proposals/issues/11
+  script: "files/apply_hostname_if.sh {{ item.key }}"
+  # item.key holds interface name that has changed above task
+  with_items: "{{ register_hostname_if.results | selectattr('changed', 'equalto', True) | map(attribute='item') | list }}"
+
+- command: "ifconfig {{ item.key }}"
+  # make sure the changed interfaces do exist
+  #
+  # XXX it is hard to make sure the configuration for each interface is valid
+  # or correct. writing a parser for possible virtual interfaces, anyone?
+  with_items: "{{ register_hostname_if.results | selectattr('changed', 'equalto', True) | map(attribute='item') | list }}"
+  changed_when: false
