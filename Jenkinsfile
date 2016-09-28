@@ -30,7 +30,7 @@ node ('virtualbox') {
     } finally {
       sh 'bundle exec kitchen destroy'
     }
-/* if you have integration tests, comment out the stage below
+/* if you have integration tests, uncomment the stage below
     stage 'integration'
     try {
       // use native rake instead of bundle exec rake
