@@ -8,8 +8,11 @@ galaxy_info:
   platforms:
     - name: OpenBSD
       versions:
-        - all
+        - 5.9
+        - 6.0
   categories:
     - networking
     - system
+  galaxy_tags:
+    - networking
 dependencies: []
