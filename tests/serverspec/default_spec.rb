@@ -102,6 +102,18 @@ when 'ubuntu', 'redhat'
     describe file("/etc/network/interfaces") do
       its(:content) { should_not match(/^source #{ Regexp.escape('interfaces.d/tun1') }$/) }
     end
+
+  when 'redhat'
+
+    describe command("ip link show tun1") do
+      its(:exit_status) { should_not eq 0 }
+      its(:stderr) { should match(/^Device "tun1" does not exist/) }
+    end
+
+    describe file("/etc/sysconfig/network-scripts/ifcfg-tun1") do
+      it { should_not exist }
+    end
+
   end
 
 else
