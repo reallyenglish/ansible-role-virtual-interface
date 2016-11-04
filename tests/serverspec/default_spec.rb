@@ -86,6 +86,24 @@ when 'ubuntu', 'redhat'
     its(:stdout) { should match(/^\s+inet #{ Regexp.escape("192.168.100.1") } peer #{ Regexp.escape("192.168.100.2/32") } (?:brd #{ Regexp.escape("192.168.100.3") } )?scope global tun0/) }
   end
 
+  # Destroy
+  case os[:family]
+  when 'ubuntu'
+    describe command("ip link show tun1") do
+      its(:exit_status) { should_not eq 0 }
+      its(:stderr) { should match(/^Device "tun1" does not exist/) }
+    end
+
+    describe file("/etc/network/interfaces.d/tun1") do
+      it { should_not exist }
+      it { should_not be_file }
+    end
+
+    describe file("/etc/network/interfaces") do
+      its(:content) { should_not match(/^source #{ Regexp.escape('interfaces.d/tun1') }$/) }
+    end
+  end
+
 else
   raise "unsupported OS #{ os[:family] }"
 end
