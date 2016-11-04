@@ -11,6 +11,7 @@ None
 | Variable | Description | Default |
 |----------|-------------|---------|
 | virtual\_interface | dict holding configurations. highly OS-dependant. see the example below | {} |
+| virtual\_interface\_to\_remove | list of interface names to destroy | [] |
 
 
 ## OpenBSD
