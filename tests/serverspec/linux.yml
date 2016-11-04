@@ -15,4 +15,13 @@
             up ifconfig tun0 multicast
             pointopoint 192.168.100.2
             post-down iptunnel del tun0
+          {% elif ansible_os_family == 'RedHat' %}
+          DEVICE=tun0
+          BOOTPROTO=none
+          ONBOOT=yes
+          TYPE=GRE
+          PEER_OUTER_IPADDR=10.0.2.100
+          PEER_INNER_IPADDR=192.168.100.2
+          MY_INNER_IPADDR=192.168.100.1
+          MY_OUTER_IPADDR=10.0.2.15
           {% endif %}
