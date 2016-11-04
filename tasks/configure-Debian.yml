@@ -15,15 +15,8 @@
   with_dict: "{{ virtual_interface }}"
   register: register_interfaces
 
-- name: Check if the interface is present
-  command: "ifconfig {{ item.key }}"
-  failed_when: false
-  changed_when: false
-  register: register_ifconfig_interface
-  with_dict: "{{ virtual_interface }}"
-
 - name: Shutdown changed interfaces if exists
-  shell: "if ifconfig {{ item }}>/dev/null; then ifdown {{ item }}; fi"
+  shell: "if ip link show {{ item }}>/dev/null; then ifdown {{ item }}; fi"
   with_items: '{{ register_interfaces_d.results | selectattr("changed", "equalto", True) | map(attribute="item") | map(attribute="key") | list }}'
 
 - name: Bring up changed interfaces
