@@ -1,0 +1,18 @@
+---
+
+- name: Remove hostname.if(5)
+  file:
+    path: "/etc/hostname.{{ item }}"
+    state: absent
+  with_items: "{{ virtual_interface_to_remove }}"
+
+- name: Check if virtual_interface_to_remove exists
+  command: "ifconfig {{ item }}"
+  register: register_ifconfig_to_destroy
+  changed_when: false
+  ignore_errors: true
+  with_items: "{{ virtual_interface_to_remove }}"
+
+- name: Destroy virtual_interface_to_remove if exist
+  command: "ifconfig {{ item }} destroy"
+  with_items: "{{ register_ifconfig_to_destroy.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"

@@ -18,6 +18,17 @@ when 'openbsd'
     its(:stderr) { should eq '' }
   end
 
+  # Destroy
+  describe file('/etc/hostname.gre1') do
+    it { should_not exist }
+    it { should_not be_file }
+  end
+
+  describe command("ifconfig gre1") do
+    its(:exit_status) { should_not eq 0 }
+    its(:stderr) { should match(/^gre1: no such interface$/) }
+  end
+
 when 'freebsd'
 
   describe file('/etc/rc.conf') do

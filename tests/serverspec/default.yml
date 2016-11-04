@@ -25,6 +25,21 @@
       when: "{{ ansible_os_family == 'FreeBSD' }}"
 
     # Create gre1 which this playbook will remove (OpenBSD)
+    - name: Create hostname.gre1
+      lineinfile:
+        dest: /etc/hostname.gre1
+        regexp: "^"
+        line: "up"
+        mode: 0640
+        state: present
+        create: True
+      changed_when: false
+      when: "{{ ansible_os_family == 'OpenBSD' }}"
+
+    - name: Start gre1
+      command: sh /etc/netstart gre1
+      changed_when: false
+      when: "{{ ansible_os_family == 'OpenBSD' }}"
 
   roles:
     - ansible-role-virtual-interface
