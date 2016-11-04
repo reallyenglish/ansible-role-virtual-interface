@@ -34,6 +34,17 @@ when 'freebsd'
     its(:stderr) { should match(/^$/) }
   end
 
+  # Destroy
+  describe command("ifconfig gre1") do
+    its(:exit_status) { should_not eq 0 }
+    its(:stderr) { should match(/^ifconfig: interface gre1 does not exist$/) }
+  end
+  describe file('/etc/rc.conf') do
+    it { should be_file }
+    its(:content) { should_not match(/#{ Regexp.escape('cloned_interfaces="${cloned_interfaces} gre1"') }/) }
+    its(:content) { should_not match(/ifconfig_gre1=.*/) }
+  end
+
 when 'ubuntu', 'redhat'
 
   case os[:family]

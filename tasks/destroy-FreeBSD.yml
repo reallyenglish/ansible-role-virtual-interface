@@ -1,0 +1,19 @@
+---
+
+- name: Destroy interfaces
+  command: "ifconfig {{ item }} destroy"
+  with_items: "{{ virtual_interface_to_remove }}"
+
+- name: Remove cloned_interfaces from /etc/rc.conf
+  lineinfile:
+    dest: /etc/rc.conf
+    regexp: "cloned_interfaces=\"\\${cloned_interfaces} {{ item }}\""
+    state: absent
+  with_items: "{{ virtual_interface_to_remove }}"
+
+- name: Remove ifconfig_$INTERFACE from /etc/rc.conf
+  lineinfile:
+    dest: /etc/rc.conf
+    regexp: "^ifconfig_{{ item }}=.*"
+    state: absent
+  with_items: "{{ virtual_interface_to_remove }}"
