@@ -1,0 +1,31 @@
+---
+
+- name: Create /etc/network/interfaces.d/$INTERFACE
+  template:
+    src: interface.Debian.j2
+    dest: "/etc/network/interfaces.d/{{ item.key }}"
+    mode: 0644
+  with_dict: "{{ virtual_interface }}"
+  register: register_interfaces_d
+
+- name: Add source /etc/network/interfaces.d/$INTERFACE to /etc/network/interfaces
+  lineinfile:
+    dest: /etc/network/interfaces
+    line: "source interfaces.d/{{ item.key }}"
+  with_dict: "{{ virtual_interface }}"
+  register: register_interfaces
+
+- name: Check if the interface is present
+  command: "ifconfig {{ item.key }}"
+  failed_when: false
+  changed_when: false
+  register: register_ifconfig_interface
+  with_dict: "{{ virtual_interface }}"
+
+- name: Shutdown changed interfaces if exists
+  shell: "if ifconfig {{ item }}>/dev/null; then ifdown {{ item }}; fi"
+  with_items: '{{ register_interfaces_d.results | selectattr("changed", "equalto", True) | map(attribute="item") | map(attribute="key") | list }}'
+
+- name: Bring up changed interfaces
+  command: "ifup {{ item }}"
+  with_items: '{{ register_interfaces_d.results | selectattr("changed", "equalto", True) | map(attribute="item") | map(attribute="key") | list }}'

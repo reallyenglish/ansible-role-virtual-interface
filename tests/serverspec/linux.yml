@@ -1,0 +1,18 @@
+- hosts: localhost
+  roles:
+    - ansible-role-virtual-interface
+  vars:
+    virtual_interface:
+      tun0:
+        config: |
+          # I do not know whether this is correct configuration.
+          {% if ansible_os_family == 'Debian' %}
+          auto tun0
+          iface tun0 inet static
+            address 192.168.100.1
+            netmask 255.255.255.252
+            pre-up iptunnel add tun0 mode gre local 10.0.2.15 remote 10.0.2.100 ttl 255
+            up ifconfig tun0 multicast
+            pointopoint 192.168.100.2
+            post-down iptunnel del tun0
+          {% endif %}
