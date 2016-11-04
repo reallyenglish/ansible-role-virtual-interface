@@ -13,6 +13,9 @@ galaxy_info:
     - name: FreeBSD
       versions:
         - 10.3
+    - name: Ubuntu
+      versions:
+        - trusty
   galaxy_tags:
     - virtual
     - network

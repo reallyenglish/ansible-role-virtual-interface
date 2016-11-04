@@ -34,6 +34,27 @@ when 'freebsd'
     its(:stderr) { should match(/^$/) }
   end
 
+when 'ubuntu'
+
+  describe file('/etc/network/interfaces.d/tun0') do
+    it { should be_file }
+    its(:content) { should match(/^auto tun0$/) }
+    its(:content) { should match(/^iface tun0 inet static$/) }
+  end
+
+  describe command('ifconfig tun0') do
+    its(:exit_status) { should eq 0 }
+    its(:stderr) { should match(/^$/) }
+  end
+
+  describe command('ip addr show tun0') do
+    its(:exit_status) { should eq 0 }
+    its(:stderr) { should match(/^$/) }
+    its(:stdout) { should match(/^\d+:\s+tun0@NONE: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu \d+ qdisc noqueue state UNKNOWN group default\s+$/) }
+    its(:stdout) { should match(/^\s+#{ Regexp.escape("link/gre 10.0.2.15 peer 10.0.2.100") }/) }
+    its(:stdout) { should match(/^\s+inet #{ Regexp.escape("192.168.100.1") } peer #{ Regexp.escape("192.168.100.2/32") } brd #{ Regexp.escape("192.168.100.3") } scope global tun0/) }
+  end
+
 else
   raise "unsupported OS #{ os[:family] }"
 end
