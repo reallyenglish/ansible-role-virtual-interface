@@ -13,26 +13,65 @@ None
 | virtual\_interface | dict holding configurations. highly OS-dependant. see the example below | {} |
 | virtual\_interface\_to\_remove | list of interface names to destroy | [] |
 
-
-## OpenBSD
-
-    virtual_interface:
-      gre0:
-        config: |
-          !echo Starting \${if}
-          description "GRE tunnel"
-          up
-
-`virtual_interface.$INTERFACE` has the configuration for `$INTERFACE`.
-`virtual_interface.$INTERFACE.config` is the content of `hostname.if(5)` of the
-interface.
-
 # Dependencies
 
 None
 
 # Example Playbook
 
+## OpenBSD and FreeBSD
+
+```yaml
+- hosts: localhost
+  roles:
+    - ansible-role-virtual-interface
+  vars:
+    virtual_interface:
+      gre0:
+        config: |
+          {% if ansible_os_family == 'OpenBSD' %}
+          !echo Starting \${if}
+          description "GRE tunnel"
+          up
+          {% elif ansible_os_family == 'FreeBSD' %}
+          inet 10.0.2.15 10.0.2.100 tunnel 192.168.1.100 192.168.2.100 grekey MY_GRE_KEY
+          {% endif %}
+    virtual_interface_to_remove:
+      - gre1
+```
+
+## CentOS and Ubuntu
+
+```yaml
+- hosts: localhost
+  roles:
+    - ansible-role-virtual-interface
+  vars:
+    virtual_interface_to_remove:
+      - tun1
+    virtual_interface:
+      tun0:
+        config: |
+          {% if ansible_os_family == 'Debian' %}
+          auto tun0
+          iface tun0 inet static
+            address 192.168.100.1
+            netmask 255.255.255.252
+            pre-up iptunnel add tun0 mode gre local 10.0.2.15 remote 10.0.2.100 ttl 255
+            up ifconfig tun0 multicast
+            pointopoint 192.168.100.2
+            post-down iptunnel del tun0
+          {% elif ansible_os_family == 'RedHat' %}
+          DEVICE=tun0
+          BOOTPROTO=none
+          ONBOOT=yes
+          TYPE=GRE
+          PEER_OUTER_IPADDR=10.0.2.100
+          PEER_INNER_IPADDR=192.168.100.2
+          MY_INNER_IPADDR=192.168.100.1
+          MY_OUTER_IPADDR=10.0.2.15
+          {% endif %}
+```
 
 # License
 
