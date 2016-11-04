@@ -10,6 +10,11 @@ galaxy_info:
       versions:
         - 5.9
         - 6.0
+    - name: FreeBSD
+      versions:
+        - 10.3
   galaxy_tags:
+    - virtual
+    - network
     - networking
 dependencies: []
