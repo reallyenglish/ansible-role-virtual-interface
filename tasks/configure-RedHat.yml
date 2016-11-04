@@ -1,0 +1,17 @@
+---
+
+- name: Create /etc/sysconfig/network-scripts/ifcfg-$INTERFACE
+  template:
+    src: templates/ifcfg.RedHat.j2
+    dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item.key }}"
+    mode: 0644
+  with_dict: "{{ virtual_interface }}"
+  register: register_ifcfg
+
+- name: Shutdown changed interfaces if exists
+  shell: "if ip link show {{ item }}>/dev/null; then ifdown {{ item }}; fi"
+  with_items: '{{ register_ifcfg.results | selectattr("changed", "equalto", True) | map(attribute="item") | map(attribute="key") | list }}'
+
+- name: Bring up changed interfaces
+  command: "ifup {{ item }}"
+  with_items: '{{ register_ifcfg.results | selectattr("changed", "equalto", True) | map(attribute="item") | map(attribute="key") | list }}'
