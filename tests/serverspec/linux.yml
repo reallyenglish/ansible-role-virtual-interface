@@ -1,6 +1,12 @@
 - hosts: localhost
   pre_tasks:
 
+    - name: See if pre_tasks has been performed before
+      stat:
+        path: /tmp/pre_tasks
+      register: register_pre_tasks
+      changed_when: false
+
     # Create tun1 to remove (Debian)
     - name: Create /etc/network/interfaces.d/tun1
       lineinfile:
@@ -17,14 +23,18 @@
             pointopoint 192.168.200.2
             post-down iptunnel del tun1
       changed_when: false
-      when: "{{ ansible_os_family == 'Debian' }}"
+      when:
+        - "{{ ansible_os_family == 'Debian' }}"
+        - "{{ not register_pre_tasks.stat.exists }}"
 
     - name: Insert source /etc/network/interfaces.d/tun1
       lineinfile:
         dest: /etc/network/interfaces
         line: "source interfaces.d/tun1"
       changed_when: false
-      when: "{{ ansible_os_family == 'Debian' }}"
+      when:
+        - "{{ ansible_os_family == 'Debian' }}"
+        - "{{ not register_pre_tasks.stat.exists }}"
 
     # Create tun1 to remove (RedHat)
     - name: Create /etc/sysconfig/network-scripts/ifcfg-tun1
@@ -42,15 +52,29 @@
           MY_INNER_IPADDR=192.168.200.1
           MY_OUTER_IPADDR=10.0.2.15
       changed_when: false
-      when: "{{ ansible_os_family == 'RedHat' }}"
+      when:
+        - "{{ ansible_os_family == 'RedHat' }}"
+        - "{{ not register_pre_tasks.stat.exists }}"
 
     - name: Bring up tun1
       command: ifup tun1
       changed_when: false
+      when:
+        - "{{ not register_pre_tasks.stat.exists }}"
 
     - name: Make sure tun1 is up
       command: ip link show tun1
       changed_when: false
+      when:
+        - "{{ not register_pre_tasks.stat.exists }}"
+
+    - name: Create a marker that indicates pre_tasks has been performed
+      file:
+        path: /tmp/pre_tasks
+        state: touch
+      changed_when: false
+      when:
+        - "{{ not register_pre_tasks.stat.exists }}"
 
   roles:
     - ansible-role-virtual-interface

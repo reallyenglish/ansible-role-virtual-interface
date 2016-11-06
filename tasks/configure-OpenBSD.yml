@@ -19,8 +19,8 @@
   # item.key holds interface name that has changed above task
   with_items: "{{ register_hostname_if.results | selectattr('changed', 'equalto', True) | map(attribute='item') | list }}"
 
-- command: "ifconfig {{ item.key }}"
-  # make sure the changed interfaces do exist
+- name: Make sure the changed interfaces do exist
+  command: "ifconfig {{ item.key }}"
   #
   # XXX it is hard to make sure the configuration for each interface is valid
   # or correct. writing a parser for possible virtual interfaces, anyone?
