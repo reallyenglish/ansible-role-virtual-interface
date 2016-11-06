@@ -1,20 +1,30 @@
 - hosts: localhost
   pre_tasks:
 
+    - name: See if pre_tasks has been performed before
+      stat:
+        path: /tmp/pre_tasks
+      register: register_pre_tasks
+      changed_when: false
+
     # Create gre1 which this playbook will remove (FreeBSD)
     - name: Add gre1 to cloned_interfaces in rc.conf(5)
       lineinfile:
         dest: /etc/rc.conf
         line: "cloned_interfaces=\"${cloned_interfaces} gre1\""
       changed_when: false
-      when: "{{ ansible_os_family == 'FreeBSD' }}"
+      when:
+        - "{{ ansible_os_family == 'FreeBSD' }}"
+        - "{{ not register_pre_tasks.stat.exists }}"
 
     - name: Add ifconfig_gre1 to rc.conf(5)
       lineinfile:
         dest: /etc/rc.conf
         line: "ifconfig_gre1=\"up\""
       changed_when: false
-      when: "{{ ansible_os_family == 'FreeBSD' }}"
+      when:
+        - "{{ ansible_os_family == 'FreeBSD' }}"
+        - "{{ not register_pre_tasks.stat.exists }}"
 
     - name: Create gre1
       service:
@@ -22,7 +32,9 @@
         arguments: gre1
         state: started
       changed_when: false
-      when: "{{ ansible_os_family == 'FreeBSD' }}"
+      when:
+        - "{{ ansible_os_family == 'FreeBSD' }}"
+        - "{{ not register_pre_tasks.stat.exists }}"
 
     # Create gre1 which this playbook will remove (OpenBSD)
     - name: Create hostname.gre1
@@ -34,12 +46,23 @@
         state: present
         create: True
       changed_when: false
-      when: "{{ ansible_os_family == 'OpenBSD' }}"
+      when:
+        - "{{ ansible_os_family == 'OpenBSD' }}"
+        - "{{ not register_pre_tasks.stat.exists }}"
 
     - name: Start gre1
       command: sh /etc/netstart gre1
       changed_when: false
-      when: "{{ ansible_os_family == 'OpenBSD' }}"
+      when:
+        - "{{ ansible_os_family == 'OpenBSD' }}"
+        - "{{ not register_pre_tasks.stat.exists }}"
+
+    - name: Create a marker that indicates pre_tasks has been performed
+      file:
+        path: /tmp/pre_tasks
+        state: touch
+      when: "{{ not register_pre_tasks.stat.exists }}"
+      changed_when: false
 
   roles:
     - ansible-role-virtual-interface
