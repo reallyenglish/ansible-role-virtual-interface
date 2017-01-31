@@ -10,7 +10,7 @@ None
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| virtual\_interface | dict holding configurations. highly OS-dependant. see the example below | {} |
+| virtual\_interfaces | array holding configurations. highly OS-dependant. see the example below | [] |
 | virtual\_interface\_to\_remove | list of interface names to destroy | [] |
 
 # Dependencies
@@ -26,8 +26,8 @@ None
   roles:
     - ansible-role-virtual-interface
   vars:
-    virtual_interface:
-      gre0:
+    virtual_interfaces:
+      - name: gre0
         config: |
           {% if ansible_os_family == 'OpenBSD' %}
           !echo Starting \${if}
@@ -49,8 +49,8 @@ None
   vars:
     virtual_interface_to_remove:
       - tun1
-    virtual_interface:
-      tun0:
+    virtual_interfaces:
+      - name: tun0
         config: |
           {% if ansible_os_family == 'Debian' %}
           auto tun0

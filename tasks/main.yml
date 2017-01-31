@@ -1,5 +1,5 @@
 ---
-# tasks file for ansible-role-virtual_interface
+# tasks file for ansible-role-virtual-interface
 
 - include_vars: "{{ ansible_os_family }}.yml"
 

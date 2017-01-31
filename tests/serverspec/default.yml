@@ -67,8 +67,8 @@
   roles:
     - ansible-role-virtual-interface
   vars:
-    virtual_interface:
-      gre0:
+    virtual_interfaces:
+      - name: gre0
         config: |
           {% if ansible_os_family == 'OpenBSD' %}
           !echo Starting \${if}

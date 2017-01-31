@@ -81,8 +81,8 @@
   vars:
     virtual_interface_to_remove:
       - tun1
-    virtual_interface:
-      tun0:
+    virtual_interfaces:
+      - name: tun0
         config: |
           # I do not know whether this is correct configuration.
           {% if ansible_os_family == 'Debian' %}

@@ -2,9 +2,9 @@
 - name: Create hostname.if(5)
   template:
     src: hostname.if.j2
-    dest: "/etc/hostname.{{ item.key }}"
+    dest: "/etc/hostname.{{ item.name }}"
     mode: 0640
-  with_dict: "{{ virtual_interface }}"
+  with_items: "{{ virtual_interfaces }}"
   register: register_hostname_if
 
 - name: Apply hostname.if(5) change
@@ -15,14 +15,15 @@
   #
   # ansible 2.2 is expected to support 'listen' keyword:
   # https://github.com/ansible/proposals/issues/11
-  script: "files/apply_hostname_if.sh {{ item.key }}"
-  # item.key holds interface name that has changed above task
-  with_items: "{{ register_hostname_if.results | selectattr('changed', 'equalto', True) | map(attribute='item') | list }}"
+  script: "files/apply_hostname_if.sh {{ item.item.name }}"
+  when: "{{ item.changed }}"
+  with_items: "{{ register_hostname_if.results }}"
 
 - name: Make sure the changed interfaces do exist
-  command: "ifconfig {{ item.key }}"
+  command: "ifconfig {{ item.item.name }}"
   #
   # XXX it is hard to make sure the configuration for each interface is valid
   # or correct. writing a parser for possible virtual interfaces, anyone?
-  with_items: "{{ register_hostname_if.results | selectattr('changed', 'equalto', True) | map(attribute='item') | list }}"
+  when: "{{ item.changed }}"
+  with_items: "{{ register_hostname_if.results }}"
   changed_when: false

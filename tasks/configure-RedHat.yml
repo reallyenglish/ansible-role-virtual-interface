@@ -3,19 +3,21 @@
 - name: Create /etc/sysconfig/network-scripts/ifcfg-$INTERFACE
   template:
     src: templates/ifcfg.RedHat.j2
-    dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item.key }}"
+    dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item.name }}"
     mode: 0644
-  with_dict: "{{ virtual_interface }}"
+  with_items: "{{ virtual_interfaces }}"
   register: register_ifcfg
 
 - name: Shutdown changed interfaces if exists
-  shell: "if ip link show {{ item }}>/dev/null; then ifdown {{ item }}; fi"
-  with_items: '{{ register_ifcfg.results | selectattr("changed", "equalto", True) | map(attribute="item") | map(attribute="key") | list }}'
+  shell: "if ip link show {{ item.item.name }}>/dev/null; then ifdown {{ item.item.name }}; fi"
+  when: "{{ item.changed }}"
+  with_items: "{{ register_ifcfg.results }}"
 
 - name: Bring up changed interfaces
-  command: "ifup {{ item }}"
+  command: "ifup {{ item.item.name }}"
   register: register_ifup
-  with_items: '{{ register_ifcfg.results | selectattr("changed", "equalto", True) | map(attribute="item") | map(attribute="key") | list }}'
+  when: "{{ item.changed }}"
+  with_items: "{{ register_ifcfg.results }}"
 
 - assert:
   # make sure stderr does not contain errors
@@ -25,9 +27,10 @@
     that:
       - "{{ item.stderr == '' }}"
     msg: "stderr is not empty: {{ item.stderr }}"
+  when: "{{ item.changed }}"
   with_items: "{{ register_ifup.results }}"
 
 - name: Make sure interfaces exist
-  command: "ip link show {{ item.key }}"
+  command: "ip link show {{ item.name }}"
   changed_when: false
-  with_dict: "{{ virtual_interface }}"
+  with_items: "{{ virtual_interfaces }}"

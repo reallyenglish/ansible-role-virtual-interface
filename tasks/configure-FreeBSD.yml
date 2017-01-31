@@ -3,21 +3,21 @@
 - name: Add virtual_interface to cloned_interfaces in rc.conf(5)
   lineinfile:
     dest: /etc/rc.conf
-    line: "cloned_interfaces=\"${cloned_interfaces} {{ item.key }}\""
-  with_dict: "{{ virtual_interface }}"
+    line: "cloned_interfaces=\"${cloned_interfaces} {{ item.name }}\""
+  with_items: "{{ virtual_interfaces }}"
   register: register_rc_conf_cloned_interfaces
 
 - name: Create ifconfig_* in rc.conf(5)
   lineinfile:
     dest: /etc/rc.conf
-    line: 'ifconfig_{{ item.key }}="{{ item.value.config | regex_replace("\n", "") }}"'
-  with_dict: "{{ virtual_interface }}"
+    line: 'ifconfig_{{ item.name }}="{{ item.config | regex_replace("\n", "") }}"'
+  with_items: "{{ virtual_interfaces }}"
   register: register_rc_conf_ifconfig
 
 - name: Apply the changes to the interfaces
   service:
     name: netif
-    arguments: "{{ item.key }}"
+    arguments: "{{ item.name }}"
     state: restarted
-  with_dict: "{{ virtual_interface }}"
+  with_items: "{{ virtual_interfaces }}"
   when: "{{ register_rc_conf_cloned_interfaces.changed or register_rc_conf_ifconfig.changed }}"
