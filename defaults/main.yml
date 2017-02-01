@@ -1,2 +1,3 @@
 virtual_interface_configs: []
 virtual_interface_to_remove: []
+virtual_interface: {}

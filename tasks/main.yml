@@ -3,6 +3,13 @@
 
 - include_vars: "{{ ansible_os_family }}.yml"
 
+# remove this when virtual_interface variable is deleted
+- name: Convert dict to list
+  set_fact:
+    virtual_interface_configs: "{{ virtual_interface | dict_to_list }}"
+  with_dict: "{{ virtual_interface }}"
+  when: "{{ virtual_interface != {} }}"
+
 - include: "configure-{{ ansible_os_family }}.yml"
 
 - include: "destroy-{{ ansible_os_family }}.yml"
