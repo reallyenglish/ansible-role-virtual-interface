@@ -4,7 +4,7 @@
     src: hostname.if.j2
     dest: "/etc/hostname.{{ item.name }}"
     mode: 0640
-  with_items: "{{ virtual_interfaces }}"
+  with_items: "{{ virtual_interface_configs }}"
   register: register_hostname_if
 
 - name: Apply hostname.if(5) change

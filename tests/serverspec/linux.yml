@@ -81,7 +81,7 @@
   vars:
     virtual_interface_to_remove:
       - tun1
-    virtual_interfaces:
+    virtual_interface_configs:
       - name: tun0
         config: |
           # I do not know whether this is correct configuration.

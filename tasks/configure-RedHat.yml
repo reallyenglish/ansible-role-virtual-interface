@@ -5,7 +5,7 @@
     src: templates/ifcfg.RedHat.j2
     dest: "/etc/sysconfig/network-scripts/ifcfg-{{ item.name }}"
     mode: 0644
-  with_items: "{{ virtual_interfaces }}"
+  with_items: "{{ virtual_interface_configs }}"
   register: register_ifcfg
 
 - name: Shutdown changed interfaces if exists
@@ -33,4 +33,4 @@
 - name: Make sure interfaces exist
   command: "ip link show {{ item.name }}"
   changed_when: false
-  with_items: "{{ virtual_interfaces }}"
+  with_items: "{{ virtual_interface_configs }}"

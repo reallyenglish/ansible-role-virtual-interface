@@ -4,14 +4,14 @@
   lineinfile:
     dest: /etc/rc.conf
     line: "cloned_interfaces=\"${cloned_interfaces} {{ item.name }}\""
-  with_items: "{{ virtual_interfaces }}"
+  with_items: "{{ virtual_interface_configs }}"
   register: register_rc_conf_cloned_interfaces
 
 - name: Create ifconfig_* in rc.conf(5)
   lineinfile:
     dest: /etc/rc.conf
     line: 'ifconfig_{{ item.name }}="{{ item.config | regex_replace("\n", "") }}"'
-  with_items: "{{ virtual_interfaces }}"
+  with_items: "{{ virtual_interface_configs }}"
   register: register_rc_conf_ifconfig
 
 - name: Apply the changes to the interfaces
@@ -19,5 +19,5 @@
     name: netif
     arguments: "{{ item.name }}"
     state: restarted
-  with_items: "{{ virtual_interfaces }}"
+  with_items: "{{ virtual_interface_configs }}"
   when: "{{ register_rc_conf_cloned_interfaces.changed or register_rc_conf_ifconfig.changed }}"

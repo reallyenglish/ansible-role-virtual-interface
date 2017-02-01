@@ -5,14 +5,14 @@
     src: interface.Debian.j2
     dest: "/etc/network/interfaces.d/{{ item.name }}"
     mode: 0644
-  with_items: "{{ virtual_interfaces }}"
+  with_items: "{{ virtual_interface_configs }}"
   register: register_interfaces_d
 
 - name: Add source /etc/network/interfaces.d/$INTERFACE to /etc/network/interfaces
   lineinfile:
     dest: /etc/network/interfaces
     line: "source interfaces.d/{{ item.name }}"
-  with_items: "{{ virtual_interfaces }}"
+  with_items: "{{ virtual_interface_configs }}"
   register: register_interfaces
 
 - name: Shutdown changed interfaces if exists
@@ -40,4 +40,4 @@
 - name: Make sure interfaces exist
   command: "ip link show {{ item.name }}"
   changed_when: false
-  with_items: "{{ virtual_interfaces }}"
+  with_items: "{{ virtual_interface_configs }}"
