@@ -1,30 +1,26 @@
 ---
 
-- name: Remove /etc/network/interfaces.d/$INTERFACE
+- name: "Remove /etc/network/interfaces.d/{{ iface.name }}"
   file:
-    path: "/etc/network/interfaces.d/{{ item }}"
+    path: "/etc/network/interfaces.d/{{ iface.name }}"
     state: absent
-  with_items: "{{ virtual_interface_to_remove }}"
 
-- name: Remove source /etc/network/interfaces.d/$INTERFACE in /etc/network/interfaces
+- name: "Remove source /etc/network/interfaces.d/{{ iface.name }} in /etc/network/interfaces"
   lineinfile:
     dest: /etc/network/interfaces
-    line: "source interfaces.d/{{ item }}"
+    line: "source interfaces.d/{{ iface.name }}"
     state: absent
-  with_items: "{{ virtual_interface_to_remove }}"
 
-- name: Check if virtual_interface_to_remove exists
-  command: "ip link show {{ item }}"
-  register: register_ip_link_to_destroy
+- name: "Check if interface {{ iface.name }} exists"
+  command: "ip link show {{ iface.name }}"
+  register: _ip_link_show_command
   changed_when: false
   ignore_errors: true
-  with_items: "{{ virtual_interface_to_remove }}"
 
-- name: Destroy virtual_interface_to_remove if exists
-  command: "ip link delete {{ item }}"
-  with_items: "{{ register_ip_link_to_destroy.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
+- name: "Destroy interface {{ iface.name }}"
+  command: "ip link delete {{ iface.name }}"
+  when: "{{ _ip_link_show_command|succeeded }}"
 
-- name: Make sure all virtual_interface_to_remove have been removed
+- name: "Make sure interface {{ iface.name }} have been removed"
   shell: "if ip link show {{ item }}; then false; fi"
   changed_when: false
-  with_items: "{{ virtual_interface_to_remove }}"

@@ -1,29 +1,32 @@
 ---
-- name: Create hostname.if(5)
+- name: "Create hostname.{{ iface.name }}"
   template:
     src: hostname.if.j2
-    dest: "/etc/hostname.{{ item.name }}"
+    dest: "/etc/hostname.{{ iface.name }}"
     mode: 0640
-  with_items: "{{ virtual_interface_configs }}"
-  register: register_hostname_if
+  register: _etc_hostname
 
-- name: Apply hostname.if(5) change
-  # XXX when configuration of an interface changes and a daemon, such as ospfd,
-  # relies on it, the daemon should be restarted. however, there is no sane way
-  # to 'subscribe' to a reasource in ansble 2.1.x. as a result, the daemon must
-  # be manually restarted.
-  #
-  # ansible 2.2 is expected to support 'listen' keyword:
-  # https://github.com/ansible/proposals/issues/11
-  script: "files/apply_hostname_if.sh {{ item.item.name }}"
-  when: "{{ item.changed }}"
-  with_items: "{{ register_hostname_if.results }}"
+- name: "Check if interface {{ iface.name }} exists"
+  command: "ifconfig {{ iface.name }}"
+  register: _ifconfig_check
+  changed_when: false
+  ignore_errors: true
+  when: "{{ _etc_hostname.changed }}"
 
-- name: Make sure the changed interfaces do exist
-  command: "ifconfig {{ item.item.name }}"
+- name: "Destroy interface {{ iface.name }} if exists"
+  command: "ifconfig {{ iface.name }} destroy"
+  when:
+    - "{{ _etc_hostname.changed }}"
+    - "{{ _ifconfig_check|succeeded }}"
+
+- name: "Apply hostname.{{ iface.name }} change"
+  command: "sh /etc/netstart {{ iface.name }}"
+  when: "{{ _etc_hostname.changed }}"
+
+- name: "Make sure the {{ iface.name }} do exist"
+  command: "ifconfig {{ iface.name }}"
   #
   # XXX it is hard to make sure the configuration for each interface is valid
   # or correct. writing a parser for possible virtual interfaces, anyone?
-  when: "{{ item.changed }}"
-  with_items: "{{ register_hostname_if.results }}"
+  when: "{{ _etc_hostname.changed }}"
   changed_when: false

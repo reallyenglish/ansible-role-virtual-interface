@@ -79,8 +79,6 @@
   roles:
     - ansible-role-virtual-interface
   vars:
-    virtual_interface_to_remove:
-      - tun1
     virtual_interface_configs:
       - name: tun0
         config: |
@@ -104,3 +102,5 @@
           MY_INNER_IPADDR=192.168.100.1
           MY_OUTER_IPADDR=10.0.2.15
           {% endif %}
+      - name: tun1
+        state: absent

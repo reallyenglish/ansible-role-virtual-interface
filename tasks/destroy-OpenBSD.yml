@@ -1,18 +1,16 @@
 ---
 
-- name: Remove hostname.if(5)
+- name: "Remove hostname.{{ iface.name }}"
   file:
-    path: "/etc/hostname.{{ item }}"
+    path: "/etc/hostname.{{ iface.name }}"
     state: absent
-  with_items: "{{ virtual_interface_to_remove }}"
 
-- name: Check if virtual_interface_to_remove exists
-  command: "ifconfig {{ item }}"
-  register: register_ifconfig_to_destroy
+- name: "Check if interface {{ iface.name }} exists"
+  command: "ifconfig {{ iface.name }}"
+  register: _ifconfig_check
   changed_when: false
   ignore_errors: true
-  with_items: "{{ virtual_interface_to_remove }}"
 
-- name: Destroy virtual_interface_to_remove if exist
-  command: "ifconfig {{ item }} destroy"
-  with_items: "{{ register_ifconfig_to_destroy.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
+- name: "Destroy interface {{ iface.name }}"
+  command: "ifconfig {{ iface.name }} destroy"
+  when: "{{ _ifconfig_check|succeeded }}"

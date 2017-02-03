@@ -15,10 +15,20 @@ def dict_to_list(dct, key_name='name'):
         lst.append(val)
     return lst
 
+def list_to_list(data, key_name='name'):
+    '''Convert list to list of dict. Example:
+    - debug: msg="{{ data | list_to_list }}"
+    '''
+    lst = []
+    for val in data:
+        lst.append({key_name: val, 'state': 'absent'})
+    return lst
+
 class FilterModule(object):
     ''' Dict to list filter '''
 
     def filters(self):
         return {
-            'dict_to_list': dict_to_list
+            'dict_to_list': dict_to_list,
+            'list_to_list': list_to_list
         }

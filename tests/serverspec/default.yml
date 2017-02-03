@@ -77,5 +77,5 @@
           {% elif ansible_os_family == 'FreeBSD' %}
           inet 10.0.2.15 10.0.2.100 tunnel 192.168.1.100 192.168.2.100 grekey MY_GRE_KEY
           {% endif %}
-    virtual_interface_to_remove:
-      - gre1
+      - name: gre1
+        state: absent

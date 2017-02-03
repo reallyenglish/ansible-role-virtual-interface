@@ -10,8 +10,9 @@ None
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| virtual\_interface\_configs | list holding configurations. highly OS-dependant. see the example below | [] |
-| virtual\_interface\_to\_remove | list of interface names to destroy | [] |
+| virtual\_interface\_configs | List holding configurations. highly OS-dependant. see the example below | [] |
+| virtual\_interface\_to\_remove | Deprecated. List of interface names to destroy | [] |
+| virtual\_interface | Deprecated. Dict holding configurations  | {} |
 
 # Dependencies
 
@@ -19,7 +20,7 @@ None
 
 # Example Playbook
 
-## OpenBSD and FreeBSD
+## OpenBSD
 
 ```yaml
 - hosts: localhost
@@ -29,39 +30,38 @@ None
     virtual_interface_configs:
       - name: gre0
         config: |
-          {% if ansible_os_family == 'OpenBSD' %}
           !echo Starting \${if}
           description "GRE tunnel"
           up
-          {% elif ansible_os_family == 'FreeBSD' %}
-          inet 10.0.2.15 10.0.2.100 tunnel 192.168.1.100 192.168.2.100 grekey MY_GRE_KEY
-          {% endif %}
-    virtual_interface_to_remove:
-      - gre1
+      - name: gre1
+        state: absent
 ```
 
-## CentOS and Ubuntu
+## FreeBSD
 
 ```yaml
 - hosts: localhost
   roles:
     - ansible-role-virtual-interface
   vars:
-    virtual_interface_to_remove:
-      - tun1
+    virtual_interface_configs:
+      - name: gre0
+        config: |
+          inet 10.0.2.15 10.0.2.100 tunnel 192.168.1.100 192.168.2.100 grekey MY_GRE_KEY
+      - name: gre1
+        state: absent
+```
+
+## Redhat and CentOS
+
+```yaml
+- hosts: localhost
+  roles:
+    - ansible-role-virtual-interface
+  vars:
     virtual_interface_configs:
       - name: tun0
         config: |
-          {% if ansible_os_family == 'Debian' %}
-          auto tun0
-          iface tun0 inet static
-            address 192.168.100.1
-            netmask 255.255.255.252
-            pre-up iptunnel add tun0 mode gre local 10.0.2.15 remote 10.0.2.100 ttl 255
-            up ifconfig tun0 multicast
-            pointopoint 192.168.100.2
-            post-down iptunnel del tun0
-          {% elif ansible_os_family == 'RedHat' %}
           DEVICE=tun0
           BOOTPROTO=none
           ONBOOT=yes
@@ -70,7 +70,30 @@ None
           PEER_INNER_IPADDR=192.168.100.2
           MY_INNER_IPADDR=192.168.100.1
           MY_OUTER_IPADDR=10.0.2.15
-          {% endif %}
+      - name: tun1
+        state: absent
+```
+
+## Debian and Ubuntu
+
+```yaml
+- hosts: localhost
+  roles:
+    - ansible-role-virtual-interface
+  vars:
+    virtual_interface_configs:
+      - name: tun0
+        config: |
+          auto tun0
+          iface tun0 inet static
+            address 192.168.100.1
+            netmask 255.255.255.252
+            pre-up iptunnel add tun0 mode gre local 10.0.2.15 remote 10.0.2.100 ttl 255
+            up ifconfig tun0 multicast
+            pointopoint 192.168.100.2
+            post-down iptunnel del tun0
+      - name: tun1
+        state: absent
 ```
 
 # License
@@ -94,5 +117,3 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 # Author Information
 
 Tomoyuki Sakurai <tomoyukis@reallyenglish.com>
-
-This README was created by [ansible-role-init](https://gist.github.com/trombik/d01e280f02c78618429e334d8e4995c0)

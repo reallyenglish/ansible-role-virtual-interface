@@ -1,26 +1,23 @@
 ---
 
-- name: Check if virtual_interface_to_remove exists
-  command: "ifconfig {{ item }}"
-  register: register_ifconfig_to_destroy
+- name: "Check if interface {{ iface.name }} exists"
+  command: "ifconfig {{ iface.name }}"
+  register: _ifconfig_check
   changed_when: false
   ignore_errors: true
-  with_items: "{{ virtual_interface_to_remove }}"
 
-- name: Destroy virtual_interface_to_remove if exists
-  command: "ifconfig {{ item }} destroy"
-  with_items: "{{ register_ifconfig_to_destroy.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
+- name: "Destroy interface {{ iface.name }}"
+  command: "ifconfig {{ iface.name }} destroy"
+  when: "{{ _ifconfig_check|succeeded }}"
 
 - name: Remove cloned_interfaces from /etc/rc.conf
   lineinfile:
     dest: /etc/rc.conf
-    regexp: "cloned_interfaces=\"\\${cloned_interfaces} {{ item }}\""
+    regexp: "cloned_interfaces=\"\\${cloned_interfaces} {{ iface.name }}\""
     state: absent
-  with_items: "{{ virtual_interface_to_remove }}"
 
-- name: Remove ifconfig_$INTERFACE from /etc/rc.conf
+- name: "Remove ifconfig_{{ iface.name }} from /etc/rc.conf"
   lineinfile:
     dest: /etc/rc.conf
-    regexp: "^ifconfig_{{ item }}=.*"
+    regexp: "^ifconfig_{{ iface.name }}=.*"
     state: absent
-  with_items: "{{ virtual_interface_to_remove }}"

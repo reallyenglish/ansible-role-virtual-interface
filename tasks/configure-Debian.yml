@@ -1,43 +1,27 @@
 ---
 
-- name: Create /etc/network/interfaces.d/$INTERFACE
+- name: "Create /etc/network/interfaces.d/{{ iface.name }}"
   template:
     src: interface.Debian.j2
-    dest: "/etc/network/interfaces.d/{{ item.name }}"
+    dest: "/etc/network/interfaces.d/{{ iface.name }}"
     mode: 0644
-  with_items: "{{ virtual_interface_configs }}"
-  register: register_interfaces_d
+  register: _if_config_file
 
-- name: Add source /etc/network/interfaces.d/$INTERFACE to /etc/network/interfaces
+- name: "Add source /etc/network/interfaces.d/{{ iface.name }} to /etc/network/interfaces"
   lineinfile:
     dest: /etc/network/interfaces
-    line: "source interfaces.d/{{ item.name }}"
-  with_items: "{{ virtual_interface_configs }}"
-  register: register_interfaces
+    line: "source interfaces.d/{{ iface.name }}"
 
-- name: Shutdown changed interfaces if exists
-  shell: "if ip link show {{ item.item.name }}>/dev/null; then ifdown {{ item.item.name }}; fi"
-  when: "{{ item.changed }}"
-  with_items: "{{ register_interfaces_d.results }}"
+- name: "Shutdown interface {{ iface.name }}"
+  shell: "if ip link show {{ iface.name }}>/dev/null; then ifdown {{ iface.name }}; fi"
+  when: "{{ _if_config_file.changed }}"
 
-- name: Bring up changed interfaces
-  command: "ifup {{ item.item.name }}"
-  register: register_ifup
-  when: "{{ item.changed }}"
-  with_items: "{{ register_interfaces_d.results }}"
+- name: "Bring up interface {{ iface.name }}"
+  command: "ifup {{ iface.name }}"
+  register: _ifup_command
+  when: "{{ _if_config_file.changed }}"
+  failed_when: "{{ _ifup_command.stderr != '' }}"
 
-- assert:
-  # make sure stderr does not contain errors
-  #
-  # XXX there are cases where ifup fails to create an interface but exits with
-  # status zero
-    that:
-      - "{{ item.stderr == '' }}"
-    msg: "stderr is not empty: {{ item.stderr }}"
-  when: "{{ item.changed }}"
-  with_items: "{{ register_ifup.results }}"
-
-- name: Make sure interfaces exist
-  command: "ip link show {{ item.name }}"
+- name: Make sure interface {{ iface.name }} exist
+  command: "ip link show {{ iface.name }}"
   changed_when: false
-  with_items: "{{ virtual_interface_configs }}"

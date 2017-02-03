@@ -3,13 +3,33 @@
 
 - include_vars: "{{ ansible_os_family }}.yml"
 
-# remove this when virtual_interface variable is deleted
+# remove when virtual_interface and virtual_interface_to_remove are not in use
+# >>>>>
 - name: Convert dict to list
   set_fact:
-    virtual_interface_configs: "{{ virtual_interface | dict_to_list }}"
-  with_dict: "{{ virtual_interface }}"
+    _list_to_add_: "{{ virtual_interface | dict_to_list }}"
+  when: "{{ virtual_interface is defined }}"
+
+- name: Convert list to list
+  set_fact:
+    _list_to_remove_: "{{ virtual_interface_to_remove | list_to_list }}"
+  when: "{{ virtual_interface_to_remove is defined }}"
+
+- name: Merge lists
+  set_fact:
+    virtual_interface_configs: "{{ _list_to_add_ }} + {{ _list_to_remove_ }}"
+  when: "{{ virtual_interface_configs == [] }}"
+
+- name: Check deprecated variable virtual_interface
+  debug:
+    msg: "Deprecated variable 'virtual_interface' will be removed next major release. Use 'virtual_interface_configs' list."
   when: "{{ virtual_interface != {} }}"
 
-- include: "configure-{{ ansible_os_family }}.yml"
+- name: Check deprecated variable virtual_interface_to_remove
+  debug:
+    msg: "Deprecated variable 'virtual_interface_to_remove' will be removed next major release. Use 'state: absent'."
+  when: "{{ virtual_interface_to_remove != [] }}"
+# <<<<<
 
-- include: "destroy-{{ ansible_os_family }}.yml"
+- include: interface.yml interface="{{item}}"
+  with_items: "{{ virtual_interface_configs }}"

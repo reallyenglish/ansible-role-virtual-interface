@@ -1,0 +1,5 @@
+- include: "destroy-{{ ansible_os_family }}.yml iface={{ interface }}"
+  when: "{{ interface.state|default('present') == 'absent' }}"
+
+- include: "configure-{{ ansible_os_family }}.yml iface={{ interface }}"
+  when: "{{ interface.state|default('present') != 'absent' }}"

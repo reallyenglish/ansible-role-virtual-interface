@@ -1,23 +1,20 @@
 ---
 
-- name: Remove /etc/sysconfig/network-scripts/ifcfg-$INTERFACE
+- name: "Remove /etc/sysconfig/network-scripts/ifcfg-{{ iface.name }}"
   file:
-    path: "/etc/sysconfig/network-scripts/ifcfg-{{ item }}"
+    path: "/etc/sysconfig/network-scripts/ifcfg-{{ iface.name }}"
     state: absent
-  with_items: "{{ virtual_interface_to_remove }}"
 
-- name: Check if virtual_interface_to_remove exists
-  command: "ip link show {{ item }}"
-  register: register_ip_link_to_destroy
+- name: "Check if interface {{ iface.name }} exists"
+  command: "ip link show {{ iface.name }}"
+  register: _ip_link_show_command
   changed_when: false
   ignore_errors: true
-  with_items: "{{ virtual_interface_to_remove }}"
 
-- name: Destroy virtual_interface_to_remove if exists
-  command: "ip link delete {{ item }}"
-  with_items: "{{ register_ip_link_to_destroy.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
+- name: "Destroy interface {{ iface.name }}"
+  command: "ip link delete {{ iface.name }}"
+  when: "{{ _ip_link_show_command|succeeded }}"
 
-- name: Make sure all virtual_interface_to_remove have been removed
-  shell: "if ip link show {{ item }}; then false; fi"
+- name: "Make sure interface {{ iface.name }} have been removed"
+  shell: "if ip link show {{ iface.name }}; then false; fi"
   changed_when: false
-  with_items: "{{ virtual_interface_to_remove }}"
