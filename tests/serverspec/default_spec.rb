@@ -1,25 +1,24 @@
-require 'spec_helper'
-require 'serverspec'
-
+require "spec_helper"
+require "serverspec"
 
 case os[:family]
-when 'openbsd'
+when "openbsd"
 
-  describe file('/etc/hostname.gre0') do
+  describe file("/etc/hostname.gre0") do
     it { should be_file }
-    it { should be_owned_by 'root' }
+    it { should be_owned_by "root" }
     it { should be_mode 640 }
     its(:content) { should match Regexp.escape('!echo Starting \${if}') }
-    its(:content) { should match /description "GRE tunnel"\nup/ }
+    its(:content) { should match(/description "GRE tunnel"\nup/) }
   end
-  describe command('ifconfig gre0') do
+  describe command("ifconfig gre0") do
     its(:exit_status) { should eq 0 }
-    its(:stdout) { should match /description: GRE tunnel/ }
-    its(:stderr) { should eq '' }
+    its(:stdout) { should match(/description: GRE tunnel/) }
+    its(:stderr) { should eq "" }
   end
 
   # Destroy
-  describe file('/etc/hostname.gre1') do
+  describe file("/etc/hostname.gre1") do
     it { should_not exist }
     it { should_not be_file }
   end
@@ -29,9 +28,9 @@ when 'openbsd'
     its(:stderr) { should match(/^gre1: no such interface$/) }
   end
 
-when 'freebsd'
+when "freebsd"
 
-  describe file('/etc/rc.conf') do
+  describe file("/etc/rc.conf") do
     it { should be_file }
     its(:content) { should match(/#{ Regexp.escape('cloned_interfaces="${cloned_interfaces} gre0"') }/) }
     its(:content) { should match(/#{ Regexp.escape('ifconfig_gre0="inet 10.0.2.15 10.0.2.100 tunnel 192.168.1.100 192.168.2.100 grekey MY_GRE_KEY"') }/) }
@@ -50,22 +49,22 @@ when 'freebsd'
     its(:exit_status) { should_not eq 0 }
     its(:stderr) { should match(/^ifconfig: interface gre1 does not exist$/) }
   end
-  describe file('/etc/rc.conf') do
+  describe file("/etc/rc.conf") do
     it { should be_file }
     its(:content) { should_not match(/#{ Regexp.escape('cloned_interfaces="${cloned_interfaces} gre1"') }/) }
     its(:content) { should_not match(/ifconfig_gre1=.*/) }
   end
 
-when 'ubuntu', 'redhat'
+when "ubuntu", "redhat"
 
   case os[:family]
-  when 'ubuntu'
-    describe file('/etc/network/interfaces.d/tun0') do
+  when "ubuntu"
+    describe file("/etc/network/interfaces.d/tun0") do
       it { should be_file }
       its(:content) { should match(/^auto tun0$/) }
       its(:content) { should match(/^iface tun0 inet static$/) }
     end
-  when 'redhat'
+  when "redhat"
     describe file("/etc/sysconfig/network-scripts/ifcfg-tun0") do
       it { should be_file }
       its(:content) { should match(/^DEVICE=tun0$/) }
@@ -73,12 +72,12 @@ when 'ubuntu', 'redhat'
     end
   end
 
-  describe command('ip link show tun0') do
+  describe command("ip link show tun0") do
     its(:exit_status) { should eq 0 }
     its(:stderr) { should match(/^$/) }
   end
 
-  describe command('ip addr show tun0') do
+  describe command("ip addr show tun0") do
     its(:exit_status) { should eq 0 }
     its(:stderr) { should match(/^$/) }
     its(:stdout) { should match(/^\d+:\s+tun0@NONE: <POINTOPOINT,(?:MULTICAST,)?NOARP,UP,LOWER_UP> mtu \d+ qdisc noqueue state UNKNOWN.*$/i) }
@@ -88,7 +87,7 @@ when 'ubuntu', 'redhat'
 
   # Destroy
   case os[:family]
-  when 'ubuntu'
+  when "ubuntu"
     describe command("ip link show tun1") do
       its(:exit_status) { should_not eq 0 }
       its(:stderr) { should match(/^Device "tun1" does not exist/) }
@@ -103,7 +102,7 @@ when 'ubuntu', 'redhat'
       its(:content) { should_not match(/^source #{ Regexp.escape('interfaces.d/tun1') }$/) }
     end
 
-  when 'redhat'
+  when "redhat"
 
     describe command("ip link show tun1") do
       its(:exit_status) { should_not eq 0 }
@@ -117,5 +116,5 @@ when 'ubuntu', 'redhat'
   end
 
 else
-  raise "unsupported OS #{ os[:family] }"
+  raise "unsupported OS #{os[:family]}"
 end
